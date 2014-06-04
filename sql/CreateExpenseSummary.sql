@@ -1,15 +1,13 @@
-USE Expenditure;
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `Summary`;
 
-DROP PROCEDURE IF EXISTS Summary;
-
-DELIMITER //
-
-CREATE PROCEDURE Summary(start DATETIME, adjustDay INT, adjustAmount DECIMAL(10, 2))
+CREATE PROCEDURE `Summary`(adjustDay INT, adjustAmount DECIMAL(10, 2), latest CHAR)
 BEGIN
 	DECLARE lMonth    INT;
 	DECLARE mSpend    DECIMAL(10, 2);
 	DECLARE target    DECIMAL(10, 2);
 	DECLARE maxDate   DATETIME;
+	DECLARE start     DATETIME;
 	DECLARE done      INT            DEFAULT FALSE;
 	DECLARE mFixed    DECIMAL(10, 2) DEFAULT 0;
 	DECLARE mMonth    DECIMAL(10, 2) DEFAULT 0;
@@ -134,7 +132,7 @@ readSpend:
 				FROM Spend
 				WHERE Timestamp BETWEEN ADDDATE(cLatest, INTERVAL -365 DAY) AND cLatest
 				AND   Category           IN ('Discretionary', 'Essential')
-				AND   Monthly             = 'Y'
+				AND   Period             = 'M'
 				AND   COALESCE(`Ignore`, 'N') = 'N');
 
 			SET mMonth = (
@@ -143,7 +141,7 @@ readSpend:
 				FROM Spend
 				WHERE Timestamp BETWEEN ADDDATE(cLatest, INTERVAL -365 DAY) AND cLatest
 				AND   Category           IN ('Discretionary', 'Essential')
-				AND   Monthly             = 'Y'
+				AND   Period              = 'M'
 				AND   Year                = cYear
 				AND   Month               = cMonth
 				AND   COALESCE(`Ignore`, 'N') = 'N');
@@ -226,8 +224,11 @@ readSpend:
 	END LOOP;
 
 	CLOSE cSpend;
-	SELECT * FROM Details;
-END;
-//
 
+	IF latest = 'Y' THEN
+		SELECT * FROM Details ORDER BY Year DESC, Month DESC LIMIT 0, 1;
+	ELSE
+		SELECT * FROM Details;
+	END IF;
+END$$
 DELIMITER ;
