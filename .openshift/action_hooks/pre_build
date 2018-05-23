@@ -1,4 +1,0 @@
-#
-# Updated to test Git
-
-cp $OPENSHIFT_REPO_DIR/ARConfig.cfg $OPENSHIFT_JBOSSEWS_DIR
